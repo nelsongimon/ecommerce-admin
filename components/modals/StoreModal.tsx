@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 
 const formSchema = z.object({
@@ -23,6 +26,7 @@ const formSchema = z.object({
 
 export default function StoreModal() {
   const storeModal = useStoreModal();
+  const [loading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -31,8 +35,16 @@ export default function StoreModal() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    // todo: create store
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/stores", values);
+      window.location.assign(`/${response.data.id}`);
+    } catch (error) {
+      toast.error("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+
   }
   return (
     <Modal
@@ -54,6 +66,7 @@ export default function StoreModal() {
                     <FormControl>
                       <Input
                         placeholder="E-commerce"
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -68,8 +81,14 @@ export default function StoreModal() {
                 items-center
                 justify-end
               ">
-                <Button variant="outline" onClick={storeModal.onClose}>Cancel</Button>
-                <Button type="submit">Continue</Button>
+                <Button
+                  variant="outline"
+                  onClick={storeModal.onClose}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button disabled={loading} type="submit">Continue</Button>
               </div>
             </form>
           </Form>
